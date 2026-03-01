@@ -46,6 +46,19 @@ abstract class Admiral::Command
           \{% end %}
           raise_extra_flags!(command)
         end
+
+        def self.display_flag(name : String) : String
+          \{% for var, spec in SPECS %}
+            if name == \{{ var }}
+              \{% if spec[:kind] != "bool" && spec[:default] != "nil" %}
+                return \{{ spec[:description][0] }} + " (default: #{\{{ spec[:default].id }}})"
+              \{% else %}
+                return \{{ spec[:description][0] }}
+              \{% end %}
+            end
+          \{% end %}
+          ""
+        end
       end
 
       private def value_from_spec(command : ::Admiral::Command, *, type : Enumerable.class, default, short : String, long : String)
@@ -305,7 +318,7 @@ abstract class Admiral::Command
    type:        type.id.stringify,
    default:     default.stringify,
    description: {
-     "--#{long.id}" + (short ? ", -#{short.id}" : "") + (default != nil && !is_bool ? " (default: #{default})" : default == nil && required == true ? " (required)" : ""),
+     "--#{long.id}" + (short ? ", -#{short.id}" : "") + (default == nil && required == true ? " (required)" : ""),
      description,
    },
    short:       short.id.stringify,
