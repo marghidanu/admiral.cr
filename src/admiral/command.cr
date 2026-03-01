@@ -54,6 +54,11 @@ abstract class Admiral::Command
   # The run command.
   abstract def run
 
+  # Returns flag display specs for help rendering. Overridden per-command via macro.
+  def flag_specs_for_help : Array(Tuple(String, String))
+    [] of Tuple(String, String)
+  end
+
   # Returns the parent command if one is specified, or raises.
   def parent : ::Admiral::Command
     @parent || raise Admiral::Error.new("No parent command set")
