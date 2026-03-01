@@ -5,13 +5,10 @@ abstract class Admiral::Command
     }
 
     protected def self.left_col_len
-      [
-        Flags::SPECS,
-        Arguments::SPECS,
-        SubCommands::SPECS,
-      ].flat_map(&.values.map(&.[:description])).map do |description|
-        description[0].size.as(Int32)
-      end.sort[-1]? || 0
+      flag_sizes = Flags::SPECS.keys.map { |name| Flags.display_flag(name).size.as(Int32) }
+      arg_sizes = Arguments::SPECS.values.map { |s| s[:description][0].size.as(Int32) }
+      sub_sizes = SubCommands::SPECS.values.map { |s| s[:description][0].size.as(Int32) }
+      (flag_sizes + arg_sizes + sub_sizes).sort[-1]? || 0
     end
 
     def self.description
@@ -48,12 +45,12 @@ abstract class Admiral::Command
       String.build do |str|
         unless Flags::SPECS.empty?
           str << "Flags:\n"
-          Flags::SPECS.values.sort_by { |spec| spec[:long] }.each do |spec|
-            string = spec[:description][0]
+          Flags::SPECS.to_a.sort_by { |_, spec| spec[:long] }.each do |name, spec|
+            string = Flags.display_flag(name)
             desc = spec[:description][1] || ""
             str << "  #{string}"
             if desc.size > 1
-              str << " " * (self.class.left_col_len - string.size)
+              str << " " * ({self.class.left_col_len - string.size, 0}.max)
               str << "  # #{desc}"
             end
             str << "\n"
