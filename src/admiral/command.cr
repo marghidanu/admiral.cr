@@ -54,14 +54,14 @@ abstract class Admiral::Command
   # The run command.
   abstract def run
 
-  # Returns the parent command if one is specified, or returns an error.
-  def parent
-    @parent.not_nil!
+  # Returns the parent command if one is specified, or raises.
+  def parent : ::Admiral::Command
+    @parent || raise Admiral::Error.new("No parent command set")
   end
 
   # Prints to the command's output `IO`.
   def print(*args)
-    case (io = @output_io)
+    case io = @output_io
     when IO
       io.print(*args)
       io.flush
@@ -93,7 +93,7 @@ abstract class Admiral::Command
 
   # Prints to the command's error `IO`.
   def print_error(*args)
-    case (io = @error_io)
+    case io = @error_io
     when IO
       io.print(*args)
       io.flush
@@ -102,7 +102,7 @@ abstract class Admiral::Command
 
   # Gets from the command's input `IO`.
   def gets(*args)
-    case (io = @input_io)
+    case io = @input_io
     when IO
       io.gets(*args)
     else
