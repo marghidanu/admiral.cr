@@ -95,6 +95,37 @@ abstract class Admiral::Command
         end
       end
     end
+
+    def flag_specs_for_help : Array(Tuple(String, String))
+      result = [] of Tuple(String, String)
+      Flags::SPECS.to_a.each do |name, spec|
+        next if name == "__help__"
+        string = Flags.display_flag(name)
+        desc = spec[:description][1] || ""
+        result << {string, desc}
+      end
+      result
+    end
+
+    private def help_parent_flags
+      specs = [] of Tuple(String, String)
+      cmd = @parent
+      while cmd
+        specs.concat(cmd.flag_specs_for_help)
+        cmd = cmd.@parent
+      end
+      return "" if specs.empty?
+      String.build do |str|
+        str << "Inherited Flags:\n"
+        specs.each do |flag_str, desc|
+          str << "  #{flag_str}"
+          if desc.size > 1
+            str << "  # #{desc}"
+          end
+          str << "\n"
+        end
+      end
+    end
   end
 
   macro define_help(custom, description = "", flag = help, short = nil)
@@ -164,7 +195,7 @@ abstract class Admiral::Command
   # ```
   macro define_help(description = "", flag = help, short = nil)
     define_help(
-      [help_usage, {{ description }} + "\n", help_flags, help_arguments, help_sub_commands].reject(&.strip.empty?).join("\n"),
+      [help_usage, {{ description }} + "\n", help_flags, help_parent_flags, help_arguments, help_sub_commands].reject(&.strip.empty?).join("\n"),
       {{ description }},
       {{ flag }},
       {{ short }}
