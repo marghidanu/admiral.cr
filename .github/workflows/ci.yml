@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        crystal: [latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: ${{ matrix.crystal }}
+      - run: crystal spec
+      - run: crystal build examples/basic.cr -o /dev/null
+      - run: crystal build examples/hello.cr -o /dev/null
+      - run: crystal build examples/complex.cr -o /dev/null
